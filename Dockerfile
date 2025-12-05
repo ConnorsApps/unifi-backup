@@ -1,6 +1,8 @@
-FROM golang:1-alpine AS builder
+FROM golang:1-bookworm AS builder
 
-RUN apk update && apk add --no-cache git ca-certificates tzdata
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git ca-certificates tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 
@@ -8,7 +10,7 @@ COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY main.go cleanup.go ./
+COPY main.go cleanup.go utils.go ./
 COPY pkg/ pkg/
 
 # Build arguments for version information
