@@ -33,5 +33,3 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /build/unifi-backup /unifi-backup
 
 ENTRYPOINT ["/unifi-backup"]
-
-CMD ["--config", "/config/config.yaml"]
