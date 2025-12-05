@@ -15,10 +15,10 @@ export UNIFI_USER=admin
 export UNIFI_PASS=your-password
 
 # Run (backups save to ./backups by default)
-go run .
+go run github.com/ConnorsApps/unifi-backup
 
 # Or use a config file
-go run . -config config.yaml
+go run github.com/ConnorsApps/unifi-backup -config config.yaml
 ```
 
 ## Requirements

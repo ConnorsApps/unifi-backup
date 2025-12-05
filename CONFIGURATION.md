@@ -13,7 +13,7 @@ If no `-config` flag is provided, the app auto-detects `config.yaml`, `config.ym
 
 A `.env` file in the current directory is also loaded automatically.
 
-See `config.example.yaml` for a full example.
+See [config.example.yaml](./examples/config.example.yaml) for a full example.
 
 ## Environment Variables
 
@@ -29,7 +29,7 @@ See `config.example.yaml` for a full example.
 | `UNIFI_MAX_RETRIES` | Maximum number of retry attempts | `3` |
 | `STORAGE_URL` | Storage backend URL (see below) | `file://./backups` |
 | `LOG_LEVEL` | Log level: `debug`, `info`, `warn`, `error` | `info` |
-| `LOG_FORMAT` | Log format: `text`, `json` | `text` |
+| `LOG_FORMAT` | Log format: `pretty`, `text`, `json` | `pretty` |
 | `RETENTION_KEEP_LAST` | Number of backups to keep (0 = unlimited) | `7` |
 
 ## Storage Backends
