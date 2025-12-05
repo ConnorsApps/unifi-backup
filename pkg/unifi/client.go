@@ -11,6 +11,8 @@ import (
 	"net/http/cookiejar"
 	"strings"
 	"time"
+
+	"github.com/ConnorsApps/unifi-backup/pkg/storage"
 )
 
 const (
@@ -219,7 +221,7 @@ func (c *Client) DownloadBackup(ctx context.Context, backupURL string) (*Downloa
 	}
 
 	contentLength := downloadResp.ContentLength
-	slog.Info("Backup download started", "size_bytes", contentLength)
+	slog.Info("Backup download started", "size", storage.FormatBytes(contentLength))
 
 	return &DownloadResponse{
 		Body:          downloadResp.Body,

@@ -140,8 +140,7 @@ func main() {
 	slog.Info(
 		"Backup saved successfully",
 		"filename", outName,
-		"size_bytes", written,
-		"expected_bytes", dlResp.ContentLength,
+		"size", storage.FormatBytes(written),
 	)
 
 	// 4. Perform backup cleanup if enabled

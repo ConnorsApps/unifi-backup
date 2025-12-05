@@ -48,8 +48,8 @@ func (pr *progressReader) Read(p []byte) (int, error) {
 	return n, err
 }
 
-// formatBytes converts bytes to human-readable format (B, KB, MB, GB, TB)
-func formatBytes(bytes int64) string {
+// FormatBytes converts bytes to human-readable format (B, KB, MB, GB, TB)
+func FormatBytes(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {
 		return fmt.Sprintf("%d B", bytes)
@@ -93,7 +93,7 @@ func (pr *progressReader) logProgress() {
 	}
 
 	attrs := []any{
-		"downloaded", formatBytes(pr.read),
+		"downloaded", FormatBytes(pr.read),
 		"elapsed", elapsed.Round(time.Second),
 		"speed", formatSpeed(speedBytesPerSec),
 	}
@@ -102,14 +102,14 @@ func (pr *progressReader) logProgress() {
 		percentage := float64(pr.read) / float64(pr.total) * 100
 		remaining := time.Duration(float64(pr.total-pr.read)/speedBytesPerSec) * time.Second
 		attrs = append(attrs,
-			"total", formatBytes(pr.total),
+			"total", FormatBytes(pr.total),
 			"percentage", fmt.Sprintf("%.1f%%", percentage),
 			"estimated_remaining", remaining.Round(time.Second),
 		)
 	} else if pr.total > 0 {
 		percentage := float64(pr.read) / float64(pr.total) * 100
 		attrs = append(attrs,
-			"total", formatBytes(pr.total),
+			"total", FormatBytes(pr.total),
 			"percentage", fmt.Sprintf("%.1f%%", percentage),
 		)
 	}
