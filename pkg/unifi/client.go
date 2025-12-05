@@ -27,21 +27,38 @@ type backupResp struct {
 	} `json:"data"`
 }
 
-// Client represents a UniFi controller API client
+// Client represents a UniFi controller API client.
+//
+// The client maintains HTTP session state including authentication cookies
+// and provides methods for logging in, creating backups, and downloading
+// backup files from a UniFi Network Controller.
+//
+// Create a new client with NewClient and authenticate with Login before
+// calling other methods.
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	site       string
 }
 
-// ClientOptions configures the UniFi API client
+// ClientOptions configures the UniFi API client behavior.
 type ClientOptions struct {
-	Site               string
+	Site string
+	// InsecureSkipVerify controls TLS certificate verification
 	InsecureSkipVerify bool
-	Timeout            time.Duration
+	// Timeout sets the HTTP client timeout for all operations. If zero, a
+	// default timeout of 10 minutes is used. For large backups or slow
+	// controllers, you may need to increase this value.
+	Timeout time.Duration
 }
 
-// NewClient creates a new UniFi API client
+// NewClient creates a new UniFi API client with the specified base URL and options.
+//
+// The baseURL should be the root URL of your UniFi controller, including the protocol
+// and port if non-standard (e.g., "https://192.168.1.1:8443" or "https://unifi.example.com").
+//
+// The client maintains an HTTP cookie jar for session management and automatically
+// reuses authentication cookies after login.
 func NewClient(baseURL string, opts ClientOptions) (*Client, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -68,7 +85,7 @@ func NewClient(baseURL string, opts ClientOptions) (*Client, error) {
 	}, nil
 }
 
-// Login authenticates with the UniFi controller
+// Login authenticates with the UniFi controller using the provided credentials.
 func (c *Client) Login(ctx context.Context, username, password string) error {
 	slog.Info("Logging in to UniFi controller", "username", username)
 
@@ -113,7 +130,21 @@ func (c *Client) Login(ctx context.Context, username, password string) error {
 	return nil
 }
 
-// CreateBackup triggers a backup on the UniFi controller and returns the backup URL
+// CreateBackup triggers a backup on the UniFi controller and returns the download URL.
+//
+// The includeDays parameter controls how much historical data to include:
+//   - 0: Current configuration only (recommended for most use cases)
+//   - N: Include N days of events, alerts, and statistics
+//
+// The username parameter is used for error messages if permissions are insufficient.
+// The user must have the Administrator role to create backups.
+//
+// Returns a URL that can be passed to DownloadBackup to retrieve the backup file.
+//
+// Returns an error if:
+//   - The user lacks Administrator permissions
+//   - The backup creation fails
+//   - The context is cancelled or times out
 func (c *Client) CreateBackup(ctx context.Context, username string, includeDays int) (string, error) {
 	slog.Info("Triggering backup", "includeDays", includeDays)
 
@@ -153,13 +184,21 @@ func (c *Client) CreateBackup(ctx context.Context, username string, includeDays 
 	return backupURL, nil
 }
 
-// DownloadResponse contains the backup file and metadata
+// DownloadResponse contains the backup file stream and metadata.
+//
+// Body contains the backup file data and must be closed by the caller
+// when done reading. ContentLength provides the expected size in bytes,
+// which can be used for progress tracking or verification.
 type DownloadResponse struct {
 	Body          io.ReadCloser
 	ContentLength int64
 }
 
-// DownloadBackup downloads the backup file from the given URL
+// DownloadBackup downloads the backup file from the given URL.
+//
+// The backupURL should be obtained from a prior call to CreateBackup. The returned
+// DownloadResponse contains an io.ReadCloser with the backup file contents and the
+// expected content length in bytes.
 func (c *Client) DownloadBackup(ctx context.Context, backupURL string) (*DownloadResponse, error) {
 	slog.Info("Downloading backup file")
 

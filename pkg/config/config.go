@@ -14,7 +14,14 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// Config holds all application configuration
+// Config holds all application configuration.
+//
+// Configuration can be loaded from:
+//   - YAML or JSON config files
+//   - Environment variables (with appropriate prefixes)
+//   - Default values
+//
+// Use LoadConfig to load and validate configuration from all sources.
 type Config struct {
 	UniFi     UniFiConfig     `json:"unifi" yaml:"unifi" envPrefix:"UNIFI_" title:"UniFi Controller" description:"UniFi controller connection settings"`
 	Storage   StorageConfig   `json:"storage" yaml:"storage" envPrefix:"STORAGE_" title:"Storage Backend" description:"Backup storage backend configuration"`
@@ -22,7 +29,9 @@ type Config struct {
 	Retention RetentionConfig `json:"retention" yaml:"retention" envPrefix:"RETENTION_" title:"Retention Policy" description:"Backup retention settings"`
 }
 
-// UniFiConfig holds UniFi controller configuration
+// UniFiConfig holds UniFi controller connection and authentication settings.
+//
+// Environment variables use the UNIFI_ prefix (e.g., UNIFI_URL, UNIFI_USER).
 type UniFiConfig struct {
 	URL                string `json:"url" yaml:"url" env:"URL" title:"Controller URL" description:"URL of your UniFi controller" example:"https://unifi.example.com" format:"uri"`
 	Username           string `json:"username" yaml:"username" env:"USER" title:"Username" description:"UniFi controller username (must be Administrator, not just Site Administrator)" example:"admin"`
@@ -34,23 +43,23 @@ type UniFiConfig struct {
 	MaxRetries         int    `json:"max_retries" yaml:"max_retries" env:"MAX_RETRIES" title:"Max Retries" description:"Maximum number of retry attempts for failed operations" default:"3" minimum:"0" example:"3"`
 }
 
-// StorageConfig holds storage backend configuration
+// StorageConfig holds storage backend configuration.
 type StorageConfig struct {
 	URL string `json:"url" yaml:"url" env:"URL" title:"Storage URL" description:"Storage backend URL" example:"file://./backups" format:"uri"`
 }
 
-// LoggingConfig holds logging configuration
+// LoggingConfig holds application logging settings.
 type LoggingConfig struct {
 	Level  string `json:"level" yaml:"level" env:"LEVEL" title:"Log Level" description:"Log level" enum:"debug,info,warn,error" default:"info" example:"info"`
 	Format string `json:"format" yaml:"format" env:"FORMAT" title:"Log Format" description:"Log output format" enum:"pretty,text,json" default:"pretty" example:"pretty"`
 }
 
-// RetentionConfig holds backup retention configuration
+// RetentionConfig holds backup retention policy settings.
 type RetentionConfig struct {
 	KeepLast int `json:"keepLast" yaml:"keepLast" env:"KEEP_LAST" title:"Keep Last" description:"Number of backups to keep (0 for unlimited)" default:"7" minimum:"0" example:"7"`
 }
 
-// DefaultConfig returns a configuration with sensible defaults
+// DefaultConfig returns a configuration with sensible defaults.
 func DefaultConfig() *Config {
 	return &Config{
 		UniFi: UniFiConfig{
@@ -76,7 +85,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-// ParseSlogLevel converts a string log level to slog.Level
+// ParseSlogLevel converts a string log level to slog.Level.
 func ParseSlogLevel(v string) (slog.Level, error) {
 	switch strings.ToLower(v) {
 	case "debug":
@@ -148,10 +157,23 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// LoadConfig loads configuration from multiple sources in the following order:
-// 1. Default values (from struct tags)
-// 2. Config file (YAML or JSON)
-// 3. Environment variables (highest priority)
+// LoadConfig loads and validates configuration from multiple sources.
+//
+// Configuration is loaded in the following order (later sources override earlier):
+//  1. Default values (see DefaultConfig)
+//  2. Config file (YAML or JSON)
+//  3. Environment variables (highest priority)
+//
+// If configPath is empty, the function attempts to auto-detect config.yaml,
+// config.yml, or config.json in the current directory.
+//
+// The function returns an error if:
+//   - The config file cannot be read or parsed
+//   - Environment variables cannot be parsed
+//   - The final configuration fails validation
+//
+// A .env file in the current directory is automatically loaded before
+// environment variable parsing (via github.com/joho/godotenv/autoload).
 func LoadConfig(configPath string) (*Config, error) {
 	// Start with defaults
 	cfg := DefaultConfig()

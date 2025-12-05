@@ -70,14 +70,26 @@ func Open(ctx context.Context, storageURL string) (ObjectStore, error) {
 	return &blobStore{b: b}, nil
 }
 
-// GenerateBackupFilename generates a backup filename with the current timestamp
+// GenerateBackupFilename generates a backup filename with the current UTC timestamp.
+//
+// Format: unifi-backup-YYYY-MM-DDTHH-MM-SSZ.unf
+//
+// Example: unifi-backup-2025-12-05T00-57-39Z.unf
+//
+// The timestamp uses hyphens instead of colons for compatibility with
+// SMB/CIFS and Windows filesystems.
 func GenerateBackupFilename() string {
 	return BackupPrefix + time.Now().UTC().Format(TimeFormat) + BackupSuffix
 }
 
-// ParseBackupFilename extracts the timestamp from a backup filename
-// Expected format: unifi-backup-<TimeFormat>.unf (e.g., unifi-backup-2025-12-05T00-57-39Z.unf)
-// Returns an error if the filename doesn't match the expected format or has an invalid timestamp.
+// ParseBackupFilename extracts the timestamp from a backup filename.
+//
+// Expected format: unifi-backup-YYYY-MM-DDTHH-MM-SSZ.unf
+//
+// Example: unifi-backup-2025-12-05T00-57-39Z.unf returns 2025-12-05 00:57:39 UTC
+//
+// Returns an error if the filename doesn't match the expected format or
+// contains an invalid timestamp.
 func ParseBackupFilename(filename string) (time.Time, error) {
 	// Strip the prefix and suffix
 	if !strings.HasPrefix(filename, BackupPrefix) || !strings.HasSuffix(filename, BackupSuffix) {
