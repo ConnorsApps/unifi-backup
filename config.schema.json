@@ -1,0 +1,163 @@
+{
+  "definitions": {
+    "ConfigLoggingConfig": {
+      "properties": {
+        "format": {
+          "title": "Log Format",
+          "description": "Log output format",
+          "default": "pretty",
+          "examples": [
+            "pretty"
+          ],
+          "enum": [
+            "pretty",
+            "text",
+            "json"
+          ],
+          "type": "string"
+        },
+        "level": {
+          "title": "Log Level",
+          "description": "Log level",
+          "default": "info",
+          "examples": [
+            "info"
+          ],
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ConfigRetentionConfig": {
+      "properties": {
+        "keepLast": {
+          "title": "Keep Last",
+          "description": "Number of backups to keep (0 for unlimited)",
+          "default": 7,
+          "examples": [
+            7
+          ],
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "ConfigStorageConfig": {
+      "properties": {
+        "url": {
+          "title": "Storage URL",
+          "description": "Storage backend URL",
+          "examples": [
+            "file://./backups"
+          ],
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "type": "object"
+    },
+    "ConfigUniFiConfig": {
+      "properties": {
+        "includeDays": {
+          "title": "Include Days",
+          "description": "Number of days of history to include in backup (0 for current state only)",
+          "default": 0,
+          "examples": [
+            0
+          ],
+          "minimum": 0,
+          "type": "integer"
+        },
+        "insecure_skip_verify": {
+          "title": "Insecure Skip Verify",
+          "description": "Skip TLS certificate verification (useful for self-signed certificates)",
+          "default": false,
+          "type": "boolean"
+        },
+        "max_retries": {
+          "title": "Max Retries",
+          "description": "Maximum number of retry attempts for failed operations",
+          "default": 3,
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "type": "integer"
+        },
+        "password": {
+          "title": "Password",
+          "description": "UniFi controller password",
+          "writeOnly": true,
+          "type": "string"
+        },
+        "site": {
+          "title": "Site Name",
+          "description": "UniFi site name",
+          "default": "default",
+          "examples": [
+            "default"
+          ],
+          "type": "string"
+        },
+        "timeout": {
+          "title": "Timeout",
+          "description": "HTTP timeout for backup operations",
+          "default": "10m",
+          "examples": [
+            "10m"
+          ],
+          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+          "type": "string"
+        },
+        "url": {
+          "title": "Controller URL",
+          "description": "URL of your UniFi controller",
+          "examples": [
+            "https://unifi.example.com"
+          ],
+          "type": "string",
+          "format": "uri"
+        },
+        "username": {
+          "title": "Username",
+          "description": "UniFi controller username (must be Administrator, not just Site Administrator)",
+          "examples": [
+            "admin"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "properties": {
+    "logging": {
+      "$ref": "#/definitions/ConfigLoggingConfig",
+      "title": "Logging",
+      "description": "Application logging configuration"
+    },
+    "retention": {
+      "$ref": "#/definitions/ConfigRetentionConfig",
+      "title": "Retention Policy",
+      "description": "Backup retention settings"
+    },
+    "storage": {
+      "$ref": "#/definitions/ConfigStorageConfig",
+      "title": "Storage Backend",
+      "description": "Backup storage backend configuration"
+    },
+    "unifi": {
+      "$ref": "#/definitions/ConfigUniFiConfig",
+      "title": "UniFi Controller",
+      "description": "UniFi controller connection settings"
+    }
+  },
+  "type": "object"
+}

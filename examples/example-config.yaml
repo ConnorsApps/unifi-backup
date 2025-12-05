@@ -1,0 +1,41 @@
+unifi:
+  # URL of your UniFi controller
+  url: https://unifi.my-site.com
+  
+  # UniFi controller credentials (must be Administrator, not just Site Administrator)
+  username: admin
+  password: changeme
+  
+  # Site name (usually "default")
+  site: default
+  
+  # Number of days of history to include in backup (0 for current state only)
+  includeDays: 0
+  
+  # Skip TLS certificate verification (useful for self-signed certificates)
+  insecure_skip_verify: false
+  
+  # HTTP timeout for backup operations (examples: 10m, 1h, 30s)
+  timeout: 10m
+  
+  # Maximum number of retry attempts for failed operations
+  max_retries: 3
+
+storage:
+  # Storage backend URL
+  # Supported formats:
+  #   - file://./backups (local filesystem)
+  #   - smb://username:password@server/share (SMB/CIFS network share)
+  url: file://./backups
+
+logging:
+  # Log level: debug, info, warn, error
+  level: info
+  
+  # Log format: text, json
+  format: text
+
+retention:
+  # Number of backups to keep (0 for unlimited)
+  # Older backups will be automatically deleted after each successful backup
+  keepLast: 7

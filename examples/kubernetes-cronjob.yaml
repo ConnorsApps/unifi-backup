@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: unifi-backup
+  namespace: default
+spec:
+  # Run daily at 2 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: unifi-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: unifi-backup
+            image: unifi-backup:latest
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: UNIFI_URL
+              value: "https://unifi.example.com"
+            - name: UNIFI_USER
+              value: "admin"
+            - name: UNIFI_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: unifi-backup-secret
+                  key: password
+            - name: UNIFI_SITE
+              value: "default"
+            - name: UNIFI_INCLUDE_DAYS
+              value: "0"
+            - name: STORAGE_URL
+              value: "s3://my-backup-bucket?region=us-west-2"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: LOG_FORMAT
+              value: "json"
+            - name: RETENTION_KEEP_LAST
+              value: "30"
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "500m"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: unifi-backup-secret
+  namespace: default
+type: Opaque
+stringData:
+  password: "your-unifi-password-here"
+
