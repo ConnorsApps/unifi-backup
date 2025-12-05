@@ -6,6 +6,8 @@ Use SMB to back up directly to a [UniFi NAS](https://ui.com/integrations/network
 
 See [CONFIGURATION.md](CONFIGURATION.md) for setup details.
 
+A Docker image is available at `ghcr.io/connorsapps/unifi-backup:latest`
+
 ## Quick Start
 
 ```bash
@@ -19,6 +21,14 @@ go run github.com/ConnorsApps/unifi-backup
 
 # Or use a config file
 go run github.com/ConnorsApps/unifi-backup -config config.yaml
+
+# Run with docker
+docker run --rm \
+  -e UNIFI_URL=https://your-unifi-controller \
+  -e UNIFI_USER=admin \
+  -e UNIFI_PASS=your-password \
+  -v $(pwd)/backups:/backups \
+  ghcr.io/connorsapps/unifi-backup:latest
 ```
 
 ## Requirements
