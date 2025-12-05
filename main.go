@@ -19,9 +19,8 @@ import (
 
 // Version information set via ldflags at build time
 var (
-	Version   = "dev"
-	Commit    = "unknown"
-	BuildTime = "unknown"
+	Version = "dev"
+	Commit  = "unknown"
 )
 
 func main() {
@@ -32,11 +31,7 @@ func main() {
 
 	// Show version and exit if requested
 	if *showVersion || len(os.Args) > 1 && strings.EqualFold(os.Args[1], "version") {
-		slog.Info("UniFi Backup Tool",
-			"version", Version,
-			"commit", Commit,
-			"built", BuildTime,
-		)
+		slog.Info("UniFi Backup Tool", "version", Version, "commit", Commit)
 		os.Exit(0)
 	}
 

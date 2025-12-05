@@ -48,7 +48,27 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+
+      - name: Prepare version information
+        id: version
+        run: |
+          # Get version (use tag if available, otherwise use branch name)
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          
+          # Get commit SHA (short version)
+          COMMIT="${{ github.sha }}"
+          COMMIT_SHORT="${COMMIT:0:7}"
+                    
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT_SHORT}" >> $GITHUB_OUTPUT
+          
+          echo "Version: ${VERSION}"
+          echo "Commit: ${COMMIT_SHORT}"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -60,4 +80,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            COMMIT=${{ steps.version.outputs.commit }}
 

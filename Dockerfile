@@ -16,14 +16,12 @@ COPY pkg/ pkg/
 # Build arguments for version information
 ARG VERSION=dev
 ARG COMMIT=unknown
-ARG BUILD_TIME=unknown
 
 # Build static binary with version info
 RUN CGO_ENABLED=0 go build \
     -ldflags="-w -s -extldflags '-static' \
               -X 'main.Version=${VERSION}' \
-              -X 'main.Commit=${COMMIT}' \
-              -X 'main.BuildTime=${BUILD_TIME}'" \
+              -X 'main.Commit=${COMMIT}'" \
     -o unifi-backup \
     .
 

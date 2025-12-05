@@ -2,7 +2,6 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: unifi-backup
-  namespace: default
 spec:
   # Run daily at 2 AM
   schedule: "0 2 * * *"
@@ -19,7 +18,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: unifi-backup
-            image: unifi-backup:latest
+            image: ghcr.io/connorsapps/unifi-backup:latest
             imagePullPolicy: IfNotPresent
             env:
             - name: UNIFI_URL
@@ -49,13 +48,11 @@ spec:
                 cpu: "100m"
               limits:
                 memory: "256Mi"
-                cpu: "500m"
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: unifi-backup-secret
-  namespace: default
 type: Opaque
 stringData:
   password: "your-unifi-password-here"
