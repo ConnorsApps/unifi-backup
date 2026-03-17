@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ConnorsApps/unifi-backup/pkg/backoff"
 	"github.com/ConnorsApps/unifi-backup/pkg/config"
 	"github.com/ConnorsApps/unifi-backup/pkg/storage"
 	"github.com/ConnorsApps/unifi-backup/pkg/unifi"
@@ -45,7 +46,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	setupLogger(cfg)
+	cfg.SetupLogger()
 
 	// Extract config values
 	storageURL := cfg.Storage.URL
@@ -99,7 +100,7 @@ func main() {
 	downloadCtx, downloadCancel := context.WithTimeout(ctx, timeout)
 	defer downloadCancel()
 
-	err = retryWithBackoff(downloadCtx, cfg.UniFi.MaxRetries, func() error {
+	err = backoff.Retry(downloadCtx, cfg.UniFi.MaxRetries, func() error {
 		var err error
 		dlResp, err = client.DownloadBackup(downloadCtx, backupURL)
 		return err
