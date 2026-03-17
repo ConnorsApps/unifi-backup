@@ -1,6 +1,6 @@
 # UniFi Backup
 
-A Golang application to automatically backup your UniFi controller configuration. Supports local filesystem, SMB/CIFS shares, S3, and Google Cloud Storage.
+A Golang application to automatically backup your UniFi network controller configuration on UniFi OS. Supports local filesystem, SMB/CIFS shares, S3, and Google Cloud Storage.
 
 Use SMB to back up directly to a [UniFi NAS](https://ui.com/integrations/network-storage) or any network share.
 
@@ -33,5 +33,5 @@ docker run --rm \
 
 ## Requirements
 
-- UniFi controller (Network Application)
-- User account with **Administrator** role (not just Site Administrator)
+- UniFi OS console running UniFi Network
+- Local UniFi OS user with **Administrator** role for UniFi Network

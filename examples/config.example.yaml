@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ConnorsApps/unifi-backup/refs/heads/main/config.schema.json
 
 unifi:
-  # URL of your UniFi controller
+  # URL of your UniFi OS console hosting UniFi Network
   url: https://unifi.my-site.com
   
-  # UniFi controller credentials (must be Administrator, not just Site Administrator)
+  # UniFi OS local credentials (must be Administrator for UniFi Network)
   username: admin
   password: changeme
   

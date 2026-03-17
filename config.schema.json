@@ -93,7 +93,7 @@
         },
         "password": {
           "title": "Password",
-          "description": "UniFi controller password",
+          "description": "UniFi OS local user password",
           "writeOnly": true,
           "type": "string"
         },
@@ -118,7 +118,7 @@
         },
         "url": {
           "title": "Controller URL",
-          "description": "URL of your UniFi controller",
+          "description": "URL of your UniFi OS console hosting UniFi Network",
           "examples": [
             "https://unifi.example.com"
           ],
@@ -127,7 +127,7 @@
         },
         "username": {
           "title": "Username",
-          "description": "UniFi controller username (must be Administrator, not just Site Administrator)",
+          "description": "UniFi OS local username with Administrator role for UniFi Network",
           "examples": [
             "admin"
           ],
@@ -156,7 +156,7 @@
     "unifi": {
       "$ref": "#/definitions/ConfigUniFiConfig",
       "title": "UniFi Controller",
-      "description": "UniFi controller connection settings"
+      "description": "UniFi OS Network Application connection settings"
     }
   },
   "type": "object"

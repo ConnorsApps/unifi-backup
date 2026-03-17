@@ -23,7 +23,7 @@ import (
 //
 // Use LoadConfig to load and validate configuration from all sources.
 type Config struct {
-	UniFi     UniFiConfig     `json:"unifi" yaml:"unifi" envPrefix:"UNIFI_" title:"UniFi Controller" description:"UniFi controller connection settings"`
+	UniFi     UniFiConfig     `json:"unifi" yaml:"unifi" envPrefix:"UNIFI_" title:"UniFi Controller" description:"UniFi OS Network Application connection settings"`
 	Storage   StorageConfig   `json:"storage" yaml:"storage" envPrefix:"STORAGE_" title:"Storage Backend" description:"Backup storage backend configuration"`
 	Logging   LoggingConfig   `json:"logging" yaml:"logging" envPrefix:"LOG_" title:"Logging" description:"Application logging configuration"`
 	Retention RetentionConfig `json:"retention" yaml:"retention" envPrefix:"RETENTION_" title:"Retention Policy" description:"Backup retention settings"`
@@ -33,9 +33,9 @@ type Config struct {
 //
 // Environment variables use the UNIFI_ prefix (e.g., UNIFI_URL, UNIFI_USER).
 type UniFiConfig struct {
-	URL                string `json:"url" yaml:"url" env:"URL" title:"Controller URL" description:"URL of your UniFi controller" example:"https://unifi.example.com" format:"uri"`
-	Username           string `json:"username" yaml:"username" env:"USER" title:"Username" description:"UniFi controller username (must be Administrator, not just Site Administrator)" example:"admin"`
-	Password           string `json:"password" yaml:"password" env:"PASS" title:"Password" description:"UniFi controller password" writeOnly:"true"`
+	URL                string `json:"url" yaml:"url" env:"URL" title:"Controller URL" description:"URL of your UniFi OS console hosting UniFi Network" example:"https://unifi.example.com" format:"uri"`
+	Username           string `json:"username" yaml:"username" env:"USER" title:"Username" description:"UniFi OS local username with Administrator role for UniFi Network" example:"admin"`
+	Password           string `json:"password" yaml:"password" env:"PASS" title:"Password" description:"UniFi OS local user password" writeOnly:"true"`
 	Site               string `json:"site" yaml:"site" env:"SITE" title:"Site Name" description:"UniFi site name" default:"default" example:"default"`
 	IncludeDays        int    `json:"includeDays" yaml:"includeDays" env:"INCLUDE_DAYS" title:"Include Days" description:"Number of days of history to include in backup (0 for current state only)" default:"0" minimum:"0" example:"0"`
 	InsecureSkipVerify bool   `json:"insecure_skip_verify" yaml:"insecure_skip_verify" env:"INSECURE" title:"Insecure Skip Verify" description:"Skip TLS certificate verification (useful for self-signed certificates)" default:"false"`

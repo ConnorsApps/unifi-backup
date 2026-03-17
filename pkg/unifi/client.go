@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 
 const (
 	defaultHTTPTimeout = 10 * time.Minute
+	networkProxyPrefix = "/proxy/network"
 )
 
 type backupResp struct {
@@ -41,6 +43,7 @@ type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	site       string
+	csrfToken  string
 }
 
 // ClientOptions configures the UniFi API client behavior.
@@ -82,7 +85,7 @@ func NewClient(baseURL string, opts ClientOptions) (*Client, error) {
 
 	return &Client{
 		httpClient: httpClient,
-		baseURL:    baseURL,
+		baseURL:    strings.TrimSuffix(baseURL, "/"),
 		site:       opts.Site,
 	}, nil
 }
@@ -100,7 +103,7 @@ func (c *Client) Login(ctx context.Context, username, password string) error {
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		c.baseURL+"/api/login",
+		c.baseURL+"/api/auth/login",
 		strings.NewReader(string(loginBody)),
 	)
 	if err != nil {
@@ -118,15 +121,16 @@ func (c *Client) Login(ctx context.Context, username, password string) error {
 		body, _ := io.ReadAll(loginResp.Body)
 		return fmt.Errorf("login failed with status %s: %s", loginResp.Status, string(body))
 	}
+	_, _ = io.Copy(io.Discard, loginResp.Body)
 
-	var loginResult backupResp
-	if err := json.NewDecoder(loginResp.Body).Decode(&loginResult); err != nil {
-		return fmt.Errorf("failed to decode login response: %w", err)
+	csrfToken := strings.TrimSpace(loginResp.Header.Get("x-updated-csrf-token"))
+	if csrfToken == "" {
+		csrfToken = strings.TrimSpace(loginResp.Header.Get("x-csrf-token"))
 	}
-
-	if loginResult.Meta.Rc != "ok" {
-		return fmt.Errorf("login failed: %s", loginResult.Meta.Msg)
+	if csrfToken == "" {
+		return fmt.Errorf("login succeeded but response did not include CSRF token header")
 	}
+	c.csrfToken = csrfToken
 
 	slog.Info("Successfully logged in")
 	return nil
@@ -153,19 +157,27 @@ func (c *Client) CreateBackup(ctx context.Context, username string, includeDays 
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		fmt.Sprintf("%s/api/s/%s/cmd/backup", c.baseURL, c.site),
+		fmt.Sprintf("%s%s/api/s/%s/cmd/backup", c.baseURL, networkProxyPrefix, c.site),
 		strings.NewReader(fmt.Sprintf(`{"cmd":"backup","days":%d}`, includeDays)),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to create backup request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if c.csrfToken == "" {
+		return "", fmt.Errorf("missing CSRF token; call Login before creating backup")
+	}
+	req.Header.Set("X-Csrf-Token", c.csrfToken)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("backup request failed: %w", err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("backup request failed with status %s: %s", resp.Status, string(body))
+	}
 
 	var backupResult backupResp
 	if err := json.NewDecoder(resp.Body).Decode(&backupResult); err != nil {
@@ -180,7 +192,7 @@ func (c *Client) CreateBackup(ctx context.Context, username string, includeDays 
 			backupResult.Meta.Rc, backupResult.Meta.Msg, len(backupResult.Data))
 	}
 
-	backupURL := c.baseURL + backupResult.Data[0].URL
+	backupURL := c.normalizeBackupURL(backupResult.Data[0].URL)
 	slog.Info("Backup created successfully", "url", backupURL)
 
 	return backupURL, nil
@@ -203,6 +215,7 @@ type DownloadResponse struct {
 // expected content length in bytes.
 func (c *Client) DownloadBackup(ctx context.Context, backupURL string) (*DownloadResponse, error) {
 	slog.Info("Downloading backup file")
+	backupURL = c.normalizeBackupURL(backupURL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, backupURL, nil)
 	if err != nil {
@@ -227,4 +240,43 @@ func (c *Client) DownloadBackup(ctx context.Context, backupURL string) (*Downloa
 		Body:          downloadResp.Body,
 		ContentLength: contentLength,
 	}, nil
+}
+
+func (c *Client) normalizeBackupURL(rawURL string) string {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return rawURL
+	}
+
+	if strings.HasPrefix(rawURL, "/") {
+		return c.baseURL + networkProxyPrefix + rawURL
+	}
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+	if parsed.Scheme == "" || parsed.Host == "" {
+		return rawURL
+	}
+	if !strings.EqualFold(parsed.Host, mustHost(c.baseURL)) {
+		return rawURL
+	}
+	if strings.HasPrefix(parsed.Path, networkProxyPrefix+"/") {
+		return rawURL
+	}
+	if strings.HasPrefix(parsed.Path, "/dl/") {
+		parsed.Path = networkProxyPrefix + parsed.Path
+		return parsed.String()
+	}
+
+	return rawURL
+}
+
+func mustHost(rawBaseURL string) string {
+	parsed, err := url.Parse(rawBaseURL)
+	if err != nil {
+		return ""
+	}
+	return parsed.Host
 }
